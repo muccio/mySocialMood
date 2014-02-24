@@ -47,6 +47,7 @@
 - (IBAction)changeTrackingToggle:(id)sender {
     globalSingleton* globals = [globalSingleton sharedManager];
     [globals updateOptions:@"tracking" value:[NSNumber numberWithBool:self.tracking_toggle.on]];
+    globals.trackPosition = self.tracking_toggle.on;
 }
 - (IBAction)change_shareing_type_setting:(id)sender {
     [[globalSingleton sharedManager] setUserPositionSharingType:self.sharing_type_setting.selectedSegmentIndex];

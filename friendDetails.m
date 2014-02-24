@@ -34,6 +34,9 @@
     NSString *operation = [NSString stringWithFormat:@"%@",[userInfo objectForKey:@"operation"]];
     
     
+    if([operation isEqualToString:@"dismissFormSheet"]){
+        [formSheet dismissAnimated:YES completionHandler:nil];
+    }
     if([operation isEqualToString:@"getUserPositionOK"]){
         if ([[globalSingleton sharedManager] friendCoordinates].latitude!=friends_lat||[[globalSingleton sharedManager] friendCoordinates].longitude!=friends_long) {
             friends_lat = [[globalSingleton sharedManager] friendCoordinates].latitude;
@@ -97,6 +100,7 @@
     // Dispose of any resources that can be recreated.
 }
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation NS_AVAILABLE(10_9, 4_0){
+    /*
     if (userLocation.location.horizontalAccuracy >= 0) {
         CLLocationCoordinate2D Coord;
         Coord.latitude = friends_lat;
@@ -125,7 +129,8 @@
             [self.mappa setRegion:adjustedRegion animated:NO];
         else
             NSLog(@"location 0 - 0");
-    }
+        
+    }*/
 }
 -(void)setMarkers{
     //NSLog(@"setMarkers");
@@ -142,7 +147,26 @@
 }
 
 - (IBAction)sendInstantMessage:(id)sender {
-    [[globalSingleton sharedManager] sendMessageToUser:friendName];
+    globalSingleton* globals = [globalSingleton sharedManager];
+    globals.message_original_user = friendName;
+    
+    messageViewController *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"message_controller"];
+    vc.dialog_type = 1;
+    [[MZFormSheetBackgroundWindow appearance] setBackgroundBlurEffect:YES];
+    [[MZFormSheetBackgroundWindow appearance] setBlurRadius:5.0];
+    [[MZFormSheetBackgroundWindow appearance] setBackgroundColor:[UIColor clearColor]];
+    formSheet = [[MZFormSheetController alloc] initWithViewController:vc];
+    formSheet.shadowRadius = 2.0;
+    formSheet.shadowOpacity = 0.3;
+    formSheet.shouldDismissOnBackgroundViewTap = YES;
+    formSheet.shouldCenterVertically = NO;
+    formSheet.movementWhenKeyboardAppears = MZFormSheetWhenKeyboardAppearsMoveToTop;
+    formSheet.transitionStyle = MZFormSheetTransitionStyleBounce;
+    [self mz_presentFormSheetController:formSheet animated:YES completionHandler:^(MZFormSheetController *formSheetController) {
+        NSLog(@"presented...");
+    }];
+    
+    //[[globalSingleton sharedManager] sendMessageToUser:friendName];
 }
 
 - (IBAction)followCompassButton:(id)sender {
@@ -169,6 +193,53 @@
             self.mappa.mapType = MKMapTypeStandard;
             break;
     }
+}
+
+- (IBAction)goToUserPosition:(id)sender {
+    CLLocationCoordinate2D startCoord = self.mappa.userLocation.location.coordinate;
+    MKCoordinateRegion adjustedRegion = [self.mappa regionThatFits:MKCoordinateRegionMakeWithDistance(startCoord, 800, 800)];
+    adjustedRegion.span.longitudeDelta  = 0.005;
+    adjustedRegion.span.latitudeDelta  = 0.005;
+    [self.mappa setRegion:adjustedRegion animated:YES];
+}
+
+- (IBAction)goToFriendPosition:(id)sender {
+    
+    CLLocationCoordinate2D startCoord = CLLocationCoordinate2DMake(friends_lat, friends_long);
+    MKCoordinateRegion adjustedRegion = [self.mappa regionThatFits:MKCoordinateRegionMakeWithDistance(startCoord, 800, 800)];
+    adjustedRegion.span.longitudeDelta  = 0.005;
+    adjustedRegion.span.latitudeDelta  = 0.005;
+    [self.mappa setRegion:adjustedRegion animated:YES];
+}
+
+- (IBAction)goToPlaceInTheMiddle:(id)sender {
+    CLLocationCoordinate2D Coord;
+    Coord.latitude = friends_lat;
+    Coord.longitude = friends_long;
+    
+    CLLocation* loc1 = [[CLLocation alloc] initWithLatitude:(CLLocationDegrees)friends_lat longitude:(CLLocationDegrees)friends_long];
+    CLLocation* loc2 = [[CLLocation alloc] initWithLatitude:(CLLocationDegrees)self.mappa.userLocation.location.coordinate.latitude longitude:(CLLocationDegrees)self.mappa.userLocation.location.coordinate.longitude];
+    CLLocationDistance dist = 3.0*[loc1 distanceFromLocation:loc2];
+    
+    NSLog(@"******** distanza : %f",dist);
+    NSLog(@"******** loc1 : %f-%f",loc1.coordinate.latitude,loc1.coordinate.longitude);
+    NSLog(@"******** loc2 : %f-%f",loc2.coordinate.latitude,loc2.coordinate.longitude);
+    
+    CLLocationCoordinate2D center_between;
+    center_between.latitude = friends_lat;// - userLocation.location.coordinate.latitude;
+    center_between.longitude = friends_long;// - userLocation.location.coordinate.longitude;
+    MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance (center_between,dist,dist);
+    
+    //maxLat = -75, minLat = 75, maxLon = -175, minLon = 175
+    if(region.span.latitudeDelta>180)region.span.latitudeDelta=180;
+    if(region.span.longitudeDelta>360)region.span.longitudeDelta=360;
+    
+    MKCoordinateRegion adjustedRegion = [self.mappa regionThatFits:region];
+    NSLog(@"******** adjustedRegion: %f,%f  %f-%f",adjustedRegion.center.latitude,adjustedRegion.center.longitude,adjustedRegion.span.latitudeDelta,adjustedRegion.span.longitudeDelta);
+    if(self.mappa.userLocation.location.coordinate.latitude!=0.0 && self.mappa.userLocation.location.coordinate.longitude!=0.0)
+        [self.mappa setRegion:adjustedRegion animated:NO];
+    else
+        NSLog(@"location 0 - 0");
 }
 
 

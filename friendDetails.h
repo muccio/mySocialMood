@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 #import <MapKit/MapKit.h>
 #import "globalSingleton.h"
+#import "messageViewController.h"
+#import "MZFormSheetController.h"
+
 
 @interface friendDetails : UIViewController<MKMapViewDelegate>{
     double friends_lat;
@@ -17,6 +20,7 @@
     int mood;
     NSString* status_message;
     NSTimer* friend_position_updater;
+    MZFormSheetController *formSheet;
 }
 
 @property (weak, nonatomic) IBOutlet MKMapView *mappa;
@@ -31,5 +35,8 @@
 - (IBAction)sendInstantMessage:(id)sender;
 - (IBAction)followCompassButton:(id)sender;
 - (IBAction)mapTypeSelect:(id)sender;
+- (IBAction)goToUserPosition:(id)sender;
+- (IBAction)goToFriendPosition:(id)sender;
+- (IBAction)goToPlaceInTheMiddle:(id)sender;
 @property (weak, nonatomic) IBOutlet UILabel *statusLabel;
 @end

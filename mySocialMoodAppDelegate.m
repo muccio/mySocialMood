@@ -38,6 +38,14 @@
     [globals writeToLog:@"didFinishLaunchingWithOptions"];
     
     last_update =  [NSDate dateWithTimeIntervalSinceNow: -(60.0f*60.0f*24.0f)];
+    //questo per i dialog trasparenti
+    UITabBarController *navigationController = (UITabBarController *)self.window.rootViewController;
+    navigationController.modalPresentationStyle = UIModalPresentationCurrentContext;
+    self.window.rootViewController.modalPresentationStyle = UIModalPresentationCurrentContext;
+    //-----
+    
+    application.applicationIconBadgeNumber = 0;
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
     return YES;
 }
 							
@@ -80,6 +88,7 @@
         [globals_ getUserPositionSharingType];
         [globals_ getLocations:@"1234"];
     }
+    [locationManager startUpdatingLocation];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
@@ -88,8 +97,10 @@
     NSLog(@"restart");
     application.applicationIconBadgeNumber = 0;
     [[UIApplication sharedApplication] cancelAllLocalNotifications];
-    [globals resetNotificationsCount];
+    if(globals.logged_in)
+        [globals resetNotificationsCount];
     [globals writeToLog:@"applicationDidBecomeActive"];
+    [locationManager startUpdatingLocation];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -182,7 +193,7 @@
     {
         NSLog(@"REMOTE NOTIFICATION RECEIVED");
         [globals writeToLog:@"REMOTE NOTIFICATION RECEIVED"];
-        UIAlertView *alertView;
+        /*UIAlertView *alertView;
         if([[userInfo objectForKey:@"aps"] objectForKey:@"alert"]==nil){
         }
         else{
@@ -203,9 +214,24 @@
             [globals get_notifications];
             UITabBarController *navigationController = (UITabBarController *)self.window.rootViewController;
             [navigationController setSelectedIndex:3];
+        }*/
+        if ([globals logged_in]){
+            [globals get_notifications];
+            [globals getFriends];
+            [globals getFollowers];
+            [globals getLocations:@"1234"];
+            if([[userInfo objectForKey:@"aps"] objectForKey:@"alert"]!=nil){
+                globals.received_message = [[userInfo objectForKey:@"aps"] objectForKey:@"alert"];
+                //[self.window.rootViewController performSegueWithIdentifier:@"message_push" sender:self];
+                globals.message_original_user = [[userInfo objectForKey:@"aps"] objectForKey:@"sender"];
+                messageViewController* vc = [self.window.rootViewController.storyboard instantiateViewControllerWithIdentifier:@"message_controller"];
+                [self.window.rootViewController presentViewController:vc animated:YES completion:nil];
+                
+            }
         }
     }
 }
+
 -(void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification{
     NSLog(@"LOCAL NOTIFICATION RECEIVED");
     [globals writeToLog:@"LOCAL NOTIFICATION RECEIVED"];

@@ -10,6 +10,7 @@
 #import <LRResty/LRResty.h>
 #import <MessageUI/MessageUI.h>
 #import "globalSingleton.h"
+#import "messageViewController.h"
 
 @interface mySocialMoodFirstViewController : UIViewController<UITabBarControllerDelegate,UITextFieldDelegate,MFMailComposeViewControllerDelegate>{
     UIActivityIndicatorView *indicator;

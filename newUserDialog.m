@@ -51,6 +51,7 @@
                                              selector:@selector(handleEvents:)
                                                  name:@"handleEvents"
                                                object:nil];
+    self.email_edit.keyboardType = UIKeyboardTypeEmailAddress;
 }
 
 - (void)didReceiveMemoryWarning

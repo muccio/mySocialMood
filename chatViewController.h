@@ -8,8 +8,16 @@
 
 #import <UIKit/UIKit.h>
 #import "globalSingleton.h"
+#import "UIBubbleTableView.h"
+#import "UIBubbleTableViewDataSource.h"
+#import "NSBubbleData.h"
 
-@interface chatViewController : UIViewController
-@property (weak, nonatomic) IBOutlet UITextView *chatLog;
--(void)refreshChatFromFile;
+
+@interface chatViewController : UIViewController<UIWebViewDelegate,UIBubbleTableViewDataSource>{
+    NSMutableArray *bubbleData;
+}
+@property (weak, nonatomic) IBOutlet UIBubbleTableView *bubbleTable;
+//@property (weak, nonatomic) IBOutlet UITextView *chatLog;
+//@property (weak, nonatomic) IBOutlet UIWebView *chatHistoryWebView;
+//-(void)refreshChatFromFile;
 @end

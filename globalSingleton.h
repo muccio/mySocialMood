@@ -43,6 +43,8 @@
     NSString* my_message;
     NSString* instant_message;
     NSString* destination_user_for_message;
+    NSString* message_original_user;
+    NSString* received_message;
     NSMutableArray *amici;
     NSMutableArray *followers;
     NSMutableArray *search_results;
@@ -92,6 +94,8 @@
 @property (nonatomic, retain) NSString* device_id;
 @property (nonatomic, retain) NSString* instant_message;
 @property (nonatomic, retain) NSString* destination_user_for_message;
+@property (nonatomic, retain) NSString* message_original_user;
+@property (nonatomic, retain) NSString* received_message;
 @property (nonatomic, readwrite) CLLocationCoordinate2D friendCoordinates;
 @property (nonatomic, readwrite) double my_latitude;
 @property (nonatomic, readwrite) double my_longitude;
@@ -124,6 +128,7 @@
 -(void)get_notifications;
 -(void)testFetch;
 -(void)sendMessageToUser:(NSString*)dest_username;
+-(void)sendMessage:(NSString*)message toUser:(NSString*)user;
 - (IBAction)postToTwitter:(UIViewController*)_view;
 - (IBAction)postToFacebook:(UIViewController*)_view;
 -(void)readOptions;

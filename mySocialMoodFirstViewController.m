@@ -149,6 +149,11 @@
 - (IBAction)postToTwitter:(id)sender {
     globalSingleton* globals = [globalSingleton sharedManager];
     [globals postToTwitter:self];
+    
+    /*
+   messageViewController* vc = [self.storyboard instantiateViewControllerWithIdentifier:@"message_controller"];
+    [self presentViewController:vc animated:YES completion:nil];
+    */
 }
 
 - (IBAction)sendErrorLog:(id)sender {

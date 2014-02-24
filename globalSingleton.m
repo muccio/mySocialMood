@@ -26,7 +26,9 @@
 @synthesize set_user_position_sharing_type_url;
 @synthesize reset_notifications_count_url;
 @synthesize remove_friend_url;
+@synthesize remove_follower_url;
 @synthesize destination_user_for_message;
+@synthesize message_original_user;
 @synthesize my_latitude;
 @synthesize my_longitude;
 @synthesize my_status;
@@ -50,6 +52,7 @@
 @synthesize debug_log;
 @synthesize trackPosition;
 @synthesize friendCoordinates;
+@synthesize received_message;
 
 #pragma mark Singleton Methods
 
@@ -685,6 +688,38 @@
     }
 }
 
+-(void)sendMessage:(NSString*)message toUser:(NSString*)dest_username{
+    destination_user_for_message = dest_username;
+    NSLog(@"%@ %@",destination_user_for_message,message);
+    NSString* rest_request= [[NSString stringWithFormat: send_instant_message_rest_url,username,destination_user_for_message,[message urlEncodeUsingEncoding:NSUTF8StringEncoding]] stringByReplacingOccurrencesOfString:@" " withString:@"%20"];
+    NSLog(@"%@",rest_request);
+    [self checkTimeoutForResty];
+    
+    [[LRResty client] get:rest_request withBlock:^(LRRestyResponse *r) {
+        NSLog(@"%@", [r asString]);
+        NSError *error;
+        NSMutableDictionary *response = [NSJSONSerialization
+                                         JSONObjectWithData:[r responseData]
+                                         options:NSJSONReadingMutableContainers
+                                         error:&error];
+        if( error )
+        {
+            NSLog(@"SEND INSTANT MESSAGE ERROR:%@", [error localizedDescription]);
+            [self sendError:@"instantmessageERR"];
+        }
+        else {
+            pending_call = FALSE;
+            NSMutableDictionary *dati = response[@"data"];
+            if([(NSString*)dati isEqualToString:@"messageSent"]){
+                //[[NSNotificationCenter defaultCenter] postNotificationName:@"loginOK" object:self];
+                [self sendOk:@"instantMessageOK"];
+            }
+            else{
+                [self sendError:@"instantMessageERR"];
+            }
+        }
+    }];
+}
 -(void)updateLocationToServer{
     
     NSString* rest_request= [[NSString stringWithFormat: set_position_rest_url,username,my_latitude,my_longitude] stringByReplacingOccurrencesOfString:@" " withString:@"%20"];
@@ -972,6 +1007,21 @@
     }
     return path;
 }
+-(NSString*)chatCssGetPath{
+    NSError *error;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES); //1
+    NSString *documentsDirectory = [paths objectAtIndex:0]; //2
+    NSString *path = [documentsDirectory stringByAppendingPathComponent:@"chat_style.css"]; //3
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    if (![fileManager fileExistsAtPath: path]) //4
+    {
+        NSString *bundle = [[NSBundle mainBundle] pathForResource:@"chat_style" ofType:@"css"]; //5
+        [fileManager copyItemAtPath:bundle toPath: path error:&error]; //6
+    }
+    return path;
+}
 -(void)clearChatLog{
     [[NSFileManager defaultManager] createFileAtPath:[self chatFileGetPath] contents:[NSData data] attributes:nil];
 }
@@ -990,13 +1040,19 @@
     [fileHandler closeFile];
 }
 -(void)refreshChatLog{
-    [self writeToChatLog:@"<HTML><HEAD><meta charset='utf-8'></HEAD><BODY><table>"];
+    NSString *cssPath = [self chatCssGetPath];
+    NSString* css = [NSString stringWithContentsOfFile:cssPath
+                                              encoding:NSUTF8StringEncoding
+                                                 error:NULL];
+    NSString* header = [NSString stringWithFormat:@"<HTML><HEAD><meta charset='utf-8'><style>%@</style></HEAD><BODY onLoad='x = 0; y = document.height;window.scroll(x,y);'><div class='container'>",css];
+    [self writeToChatLog:header];
     for (NSMutableArray*loc in notifications) {
-        [self writeToChatLog:@"<tr>"];
-        NSString* chat_entry = [NSString stringWithFormat:@"<td><b>%@</td><td>to: %@</b></td><td>from: %@</td><td>%@</td>",[loc objectAtIndex:0],[loc objectAtIndex:1],[loc objectAtIndex:2],[loc objectAtIndex:3]];
+        [self writeToChatLog:@"<div class='bubble'>"];
+        NSString* chat_entry = [NSString stringWithFormat:@"<b>%@to: %@</b>from: %@ %@",[loc objectAtIndex:0],[loc objectAtIndex:1],[loc objectAtIndex:2],[loc objectAtIndex:3]];
         [self writeToChatLog:chat_entry];
-        [self writeToChatLog:@"</tr>"];
+        [self writeToChatLog:@"</div>"];
     }
-    [self writeToChatLog:@"</table></BODY></HTML>"];
+    [self writeToChatLog:@"</div></BODY></HTML>"];
 }
+
 @end

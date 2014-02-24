@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
 #import "globalSingleton.h"
+#import "messageViewController.h"
 
 @interface mySocialMoodAppDelegate : UIResponder <UIApplicationDelegate, CLLocationManagerDelegate>{
     CLLocationManager *locationManager;
